@@ -1,27 +1,32 @@
 from mcschematic import MCSchematic, Version
 import os
 
-
 def export_schem(blocks, filename):
+
+    if not blocks:
+        print("[ERROR] No blocks")
+        return
 
     schem = MCSchematic()
 
-    name = os.path.basename(filename).replace(".obj", "")
+    clean_name = os.path.basename(filename).replace(".obj", "")
 
     min_x = min(b["x"] for b in blocks)
     min_y = min(b["y"] for b in blocks)
     min_z = min(b["z"] for b in blocks)
 
-    for b in blocks:
+    placed = 0
 
+    for b in blocks:
         x = b["x"] - min_x
         y = b["y"] - min_y
         z = b["z"] - min_z
 
-        mat = b.get("mc_block", "stone")
+        schem.setBlock((x, y, z), "minecraft:stone")
+        placed += 1
 
-        schem.setBlock((x, y, z), f"minecraft:{mat}")
+    schem.save(".", clean_name, version=Version.JE_1_20)
 
-    schem.save(".", name, version=Version.JE_1_20)
-
-    print("[EXPORT] OK ->", name + ".schem")
+    print("\n✔ Export OK")
+    print("Blocks:", placed)
+    print("File:", clean_name + ".schem")
