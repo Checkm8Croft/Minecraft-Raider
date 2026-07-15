@@ -18,3 +18,6 @@ Remember that the numbers are ordered by texture, e.g. 0,1; the left number is t
 (0,1) = right of (0,0)
 (1,0) = below (0,0)
 ```
+
+![Tomb Raider Screen](TRScreen.jpg)
+![Minecraft Screen](MCScreen.jpg)
