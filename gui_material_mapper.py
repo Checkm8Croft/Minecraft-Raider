@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from typing import Dict, Optional, Tuple
-import json
 
 try:
     from PySide6.QtWidgets import (
@@ -24,6 +23,7 @@ def _get_minecraft_blocks(version="1.19.2"):
     try:
         # Import here to handle missing package gracefully
         import minecraft_data
+        import json
         # Construct path to blocks.json for the specified version
         # Structure: minecraft_data/data/data/pc/{version}/blocks.json
         base_path = os.path.join(os.path.dirname(minecraft_data.__file__), 'data', 'data', 'pc')
@@ -35,7 +35,7 @@ def _get_minecraft_blocks(version="1.19.2"):
 
             # Extract block names
             block_names = set()
-            # The blocks.json structure appears to be an array of objects or a dict
+            # The blocks.json structure appears to be an array of objects
             if isinstance(blocks_data, list):
                 for block in blocks_data:
                     if isinstance(block, dict):

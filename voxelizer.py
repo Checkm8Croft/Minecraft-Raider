@@ -1,7 +1,7 @@
 import math
 from PySide6.QtGui import QImage
 
-TILE_SIZE = 64  # size of each sub‑texture in pixels
+TILE_SIZE = 64  # size of each sub-texture in pixels
 
 def voxelize(obj_data, scale=4, tile_map=None):
     """
@@ -68,57 +68,61 @@ def voxelize(obj_data, scale=4, tile_map=None):
                 texture_width = texture_image.width()
                 texture_height = texture_image.height()
 
-        # Get VT and VN tuples
+        # Determine block for this face (single block per face based on average UV)
+        block_name = "stone"  # default
         vt_tuple = face.get("vt")
-        vn_tuple = face.get("vn")
-
-        # Helper to get VT for a vertex index in face
-        def get_vt(face_idx):
-            if vt_tuple is None:
-                return None
-            vt_index = vt_tuple[face_idx]
-            if vt_index is None:
-                return None
-            return texcoords[vt_index]
-
-        # Triangulate fan
-        v0_idx = verts[0]
-        v0 = vertices[v0_idx]
-        v0 = (v0[0]*scale, v0[1]*scale, v0[2]*scale)
-        vt0 = get_vt(0)
-
-        for i in range(1, len(verts)-1):
-            v1_idx = verts[i]
-            v2_idx = verts[i+1]
-            v1 = vertices[v1_idx]
-            v2 = vertices[v2_idx]
-            v1 = (v1[0]*scale, v1[1]*scale, v1[2]*scale)
-            v2 = (v2[0]*scale, v2[1]*scale, v2[2]*scale)
-            vt1 = get_vt(i)
-            vt2 = get_vt(i+1)
-
-            # Determine block for this triangle
-            block_name = "stone"  # default
-            if tile_map is not None:
-                if texture_image is not None and vt0 is not None and vt1 is not None and vt2 is not None:
-                    # Average UV of triangle
-                    u = (vt0[0] + vt1[0] + vt2[0]) / 3.0
-                    v = (vt0[1] + vt1[1] + vt2[1]) / 3.0
-                    # Clamp to [0,1]
-                    u = max(0.0, min(1.0, u))
-                    v = max(0.0, min(1.0, v))
-                    # Tile coordinates
-                    tu = int(u * texture_width // TILE_SIZE)
-                    tv = int(v * texture_height // TILE_SIZE)
-                    block_name = tile_map.get((material, tu, tv), "stone")
+        if tile_map is not None and texture_image is not None and vt_tuple is not None:
+            # Gather UVs for each vertex in the face
+            us = []
+            vs = []
+            for vi in verts:
+                # vi is vertex index
+                vt_index = vt_tuple[verts.index(vi)]  # position in vt tuple
+                if vt_index is not None and vt_index < len(texcoords):
+                    vt = texcoords[vt_index]
+                    if vt is not None:
+                        u, v = vt
+                        us.append(u)
+                        vs.append(v)
+            if us and vs:
+                u_avg = sum(us) / len(us)
+                v_avg = sum(vs) / len(vs)
+                # Clamp to [0,1]
+                u_avg = max(0.0, min(1.0, u_avg))
+                v_avg = max(0.0, min(1.0, v_avg))
+                # Flip V to match image coordinate space (V=0 is top)
+                v_avg = 1.0 - v_avg
+                # Compute tile coordinates
+                num_tiles_x = texture_width // TILE_SIZE
+                num_tiles_y = texture_height // TILE_SIZE
+                if num_tiles_x > 0 and num_tiles_y > 0:
+                    tile_col = min(int(u_avg * num_tiles_x), num_tiles_x - 1)
+                    tile_row = min(int(v_avg * num_tiles_y), num_tiles_y - 1)
+                    block_name = tile_map.get((material, tile_row, tile_col), "stone")
                 else:
-                    # Fallback to material-only mapping (tile (0,0))
+                    # No tiles fit; fall back to (0,0)
                     block_name = tile_map.get((material, 0, 0), "stone")
             else:
-                # No tile_map provided, use material as block name (original behavior)
+                block_name = tile_map.get((material, 0, 0), "stone")
+        else:
+            # Fallback to material-only mapping (tile (0,0))
+            if tile_map is not None:
+                block_name = tile_map.get((material, 0, 0), "stone")
+            else:
                 block_name = material
 
-            # Voxelize the triangle with density
+        # Get scaled vertices for voxelisation
+        scaled_verts = []
+        for vi in verts:
+            v = vertices[vi]
+            scaled_verts.append((v[0]*scale, v[1]*scale, v[2]*scale))
+
+        # Triangulate fan and voxelise
+        v0 = scaled_verts[0]
+        for i in range(1, len(scaled_verts)-1):
+            v1 = scaled_verts[i]
+            v2 = scaled_verts[i+1]
+
             steps = 4
             for a in range(steps + 1):
                 for b in range(steps + 1 - a):
