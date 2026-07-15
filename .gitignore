@@ -1,2 +1,6 @@
 __pycache__/
 *.schem
+*.obj
+*.png
+*.mtl
+.claude/

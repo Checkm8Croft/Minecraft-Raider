@@ -1,1 +1,4 @@
 nbtlib
+mcschematic
+PySide6
+minecraft-data

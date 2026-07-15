@@ -22,11 +22,11 @@ def export_schem(blocks, filename):
         y = b["y"] - min_y
         z = b["z"] - min_z
 
-        schem.setBlock((x, y, z), "minecraft:stone")
+        schem.setBlock((x, y, z), f"minecraft:{b['material']}")
         placed += 1
 
     schem.save(".", clean_name, version=Version.JE_1_20)
 
-    print("\n✔ Export OK")
+    print("\n[OK] Export OK")
     print("Blocks:", placed)
     print("File:", clean_name + ".schem")

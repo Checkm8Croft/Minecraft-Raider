@@ -3,8 +3,8 @@ from collections import Counter
 
 from obj_parser import load_obj
 from voxelizer import voxelize
-from material_mapper import map_material
 from schem_exporter import export_schem
+import gui_material_mapper
 
 
 def main():
@@ -14,20 +14,23 @@ def main():
 
     obj = load_obj(path)
 
-    blocks = voxelize(obj)
+    # Get mapping from (material, tile_row, tile_col) -> Minecraft block via GUI
+    print("[MAPPING] Opening GUI to map material tiles to Minecraft blocks...")
+    tile_map = gui_material_mapper.run_material_mapper_gui(
+        obj["materials"], obj.get("material_textures", {})
+    )
+    print("[MAPPING] Result (first few entries):", dict(list(tile_map.items())[:5]))
 
-    # APPLY MTL → MC
-    for b in blocks:
-        b["mc_block"] = map_material(b["material"])
+    blocks = voxelize(obj, scale=4, tile_map=tile_map)
 
-    print("\n=== MATERIALS OBJ ===")
+    print("\n=== MATERIALS OBJ (original) ===")
     print(obj["materials"])
 
-    print("\n=== BLOCK MATERIALS ===")
+    print("\n=== BLOCK MATERIALS (mapped) ===")
     print(Counter(b["material"] for b in blocks))
 
     print("\n=== MC BLOCKS ===")
-    print(Counter(b["mc_block"] for b in blocks))
+    print(Counter(b["material"] for b in blocks))
 
     export_schem(blocks, path)
 
