@@ -12,16 +12,15 @@ import gui_material_mapper
 
 def main():
     app = QApplication.instance()
-    owns_app = app is None
 
-    if owns_app:
+    if app is None:
         app = QApplication(sys.argv[:1])
 
     path, _ = QFileDialog.getOpenFileName(
         None,
         "Select a Tomb Raider OBJ model",
         "",
-        "OBJ files (*.obj);;All files (*)"
+        "OBJ files (*.obj);;All files (*)",
     )
 
     if not path:
@@ -32,22 +31,23 @@ def main():
 
     obj = load_obj(path)
 
-    # Get mapping from (material, tile_row, tile_col)
-    # to Minecraft blocks via GUI.
-    print("[MAPPING] Opening GUI to map material tiles to Minecraft blocks...")
+    print("[MAPPING] Opening material mapper and output selection...")
 
-    tile_map = gui_material_mapper.run_material_mapper_gui(
-        obj["materials"],
-        obj.get("material_textures", {})
+    tile_map, output_path = (
+        gui_material_mapper.run_material_mapper_gui(
+            obj["materials"],
+            obj.get("material_textures", {}),
+            input_path=path,
+        )
     )
 
-    if tile_map is None:
-        print("[CANCELLED] Material mapping cancelled.")
+    if tile_map is None or output_path is None:
+        print("[CANCELLED] Conversion cancelled.")
         return
 
     print(
         "[MAPPING] Result (first few entries):",
-        dict(list(tile_map.items())[:5])
+        dict(list(tile_map.items())[:5]),
     )
 
     blocks = voxelize(obj, scale=4, tile_map=tile_map)
@@ -61,7 +61,7 @@ def main():
     print("\n=== MC BLOCKS ===")
     print(Counter(b["material"] for b in blocks))
 
-    export_schem(blocks, path)
+    export_schem(blocks, output_path)
 
 
 if __name__ == "__main__":

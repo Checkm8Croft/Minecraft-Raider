@@ -11,7 +11,6 @@ def export_schem(blocks, filename):
         print("[ERROR] No blocks to export.")
         return
 
-    # Validate coordinates before creating the schematic.
     for block in blocks:
         for axis in ("x", "y", "z"):
             value = block.get(axis)
@@ -31,10 +30,13 @@ def export_schem(blocks, filename):
     size_x = max_x - min_x + 1
     size_y = max_y - min_y + 1
     size_z = max_z - min_z + 1
+
     total_volume = size_x * size_y * size_z
 
-    print(f"[MEMORY DEBUG] Dimensions: "
-          f"{size_x} x {size_y} x {size_z}")
+    print(
+        f"[MEMORY DEBUG] Dimensions: "
+        f"{size_x} x {size_y} x {size_z}"
+    )
     print(f"[MEMORY DEBUG] Total Volume: {total_volume:,} cells")
     print(f"[MEMORY DEBUG] Actual Blocks: {len(blocks):,}")
 
@@ -45,13 +47,21 @@ def export_schem(blocks, filename):
         or total_volume > MAX_VOLUME
     ):
         print("[ERROR] Schematic exceeds the safe size limit.")
-        print("[ERROR] Check the voxelizer's coordinate normalization.")
         print("[ERROR] Export cancelled to prevent MemoryError.")
         return
 
-    schem = MCSchematic()
-    clean_name = os.path.splitext(os.path.basename(filename))[0]
+    # Use the destination selected in the GUI.
+    output_path = os.path.abspath(
+        os.path.expanduser(filename)
+    )
+    output_dir = os.path.dirname(output_path)
+    clean_name = os.path.splitext(
+        os.path.basename(output_path)
+    )[0]
 
+    os.makedirs(output_dir, exist_ok=True)
+
+    schem = MCSchematic()
     placed = 0
 
     for block in blocks:
@@ -70,8 +80,18 @@ def export_schem(blocks, filename):
         schem.setBlock((x, y, z), material)
         placed += 1
 
-    schem.save(".", clean_name, version=Version.JE_1_20)
+    schem.save(
+        output_dir,
+        clean_name,
+        version=Version.JE_1_20,
+    )
 
-    print("[OK] Export OK")
+    saved_path = os.path.join(output_dir, clean_name + ".schem")
+
+    print("\n[OK] Export OK")
     print("Blocks:", placed)
-    print("File:", clean_name + ".schem")
+    print("File:", saved_path)
+
+
+if __name__ == "__main__":
+    print("Run main.py to launch the application.")
