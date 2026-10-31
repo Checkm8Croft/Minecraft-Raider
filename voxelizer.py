@@ -240,8 +240,14 @@ def voxelize(obj_data, scale=4, tile_map=None):
             v1 = face_vertices[i]
             v2 = face_vertices[i + 1]
 
-            steps = 4
+            edge1 = math.dist(v0, v1)
+            edge2 = math.dist(v1, v2)
+            edge3 = math.dist(v2, v0)
 
+            max_edge = max(edge1, edge2, edge3)
+
+            steps = max(4, math.ceil(max_edge * 2))
+            
             for a in range(steps + 1):
                 for b in range(steps + 1 - a):
                     t1 = a / steps

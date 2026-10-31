@@ -22,6 +22,7 @@ def load_obj(filepath):
     material_textures = {}
 
     current_material = None
+    current_object = None
 
     obj_path = Path(filepath).expanduser().resolve()
     obj_dir = obj_path.parent
@@ -44,6 +45,9 @@ def load_obj(filepath):
 
             parts = line.split()
             if not parts:
+                continue
+            if parts[0] == 'o':
+                current_object = ' '.join(parts[1:])
                 continue
 
             if parts[0] == 'v':
@@ -79,7 +83,8 @@ def load_obj(filepath):
                             "verts": (base_v, verts[i], verts[i + 1]),
                             "vt": face_vt if any(v is not None for v in face_vt) else None,
                             "vn": face_vn if any(v is not None for v in face_vn) else None,
-                            "material": current_material
+                            "material": current_material,
+                            "object": current_object
                         })
 
             elif parts[0] == 'usemtl':

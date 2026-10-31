@@ -3,6 +3,7 @@ import sys
 from collections import Counter
 
 from PySide6.QtWidgets import QApplication, QFileDialog
+from numpy import rint
 
 from obj_parser import load_obj
 from voxelizer import voxelize
@@ -30,6 +31,8 @@ def main():
     print("[LOAD]", path)
 
     obj = load_obj(path)
+    print("\n=== TEST OBJ OBJECTS ===")
+    print(set(face.get("object") for face in obj["faces"]))
 
     print("[MAPPING] Opening material mapper and output selection...")
 
